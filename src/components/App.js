@@ -1,5 +1,6 @@
 import {api} from '../utils/Api.js';
 import {useEffect, useState} from 'react';
+import { Route, Routes, Navigate } from "react-router-dom";
 import '../index.css';
 import Header from './Header.js';
 import Main from './Main.js';
@@ -11,6 +12,8 @@ import ImagePopup from './ImagePopup.js';
 import ConfirmationPopup from './ConfirmationPopup.js';
 import {CurrentUserContext} from '../contexts/CurrentUserContext.js';
 import InfoTooltip from './InfoTooltip.js';
+import Register from './Register.js';
+import Login from './Login.js';
 
 function App() {
     const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] =
@@ -140,21 +143,44 @@ function App() {
     }
 
     return (
-        <CurrentUserContext.Provider value={currentUser}>
-            <div className="body">
-                <div className="page">
-                    <Header />
-                    <Main cards={cards} onCardClick={handleCardClick} onCardLike={handleCardLike} onCardDelete={handleDeleteClick} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} />
-                    <Footer />
+        <Routes>
+            {/* <Route path="/" element={this.state.loggedIn ? <Navigate to="/ducks" replace /> : <Navigate to="/login" replace />} /> */}
+            <Route path="/" element={
+                <CurrentUserContext.Provider value={currentUser}>
+                    <div className="body">
+                        <div className="page">
+                            <Header />
+                            <Main cards={cards} onCardClick={handleCardClick} onCardLike={handleCardLike} onCardDelete={handleDeleteClick} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} />
+                            <Footer />
+                        </div>
+                        <EditProfilePopup onUpdateUser={handleUpdateUser} isOpen={isEditProfilePopupOpen} isLoading={isLoadingProfilePopup} onClose={closeAllPopups} />
+                        <EditAvatarPopup onUpdateAvatar={handleUpdateAvatar} isOpen={isEditAvatarPopupOpen} isLoading={isLoadingAvatarPopup} onClose={closeAllPopups} />
+                        <AddPlacePopup onAddPlace={handleAddPlaceSubmit} isOpen={isAddPlacePopupOpen} isLoading={isLoadingPlacePopup} onClose={closeAllPopups} />
+                        <ConfirmationPopup card={toDeleteCard} onConfirmDelete={handleCardDelete} onClose={closeAllPopups} />
+                        <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+                        <InfoTooltip />
+                    </div>
+                </CurrentUserContext.Provider>
+           } />
+            <Route path="/sing-up" element={
+                <div className="body">
+                    <div className="page">
+                        <Header />
+                        <Register />
+                        <Footer />
+                    </div>
                 </div>
-                <EditProfilePopup onUpdateUser={handleUpdateUser} isOpen={isEditProfilePopupOpen} isLoading={isLoadingProfilePopup} onClose={closeAllPopups} />
-                <EditAvatarPopup onUpdateAvatar={handleUpdateAvatar} isOpen={isEditAvatarPopupOpen} isLoading={isLoadingAvatarPopup} onClose={closeAllPopups} />
-                <AddPlacePopup onAddPlace={handleAddPlaceSubmit} isOpen={isAddPlacePopupOpen} isLoading={isLoadingPlacePopup} onClose={closeAllPopups} />
-                <ConfirmationPopup card={toDeleteCard} onConfirmDelete={handleCardDelete} onClose={closeAllPopups} />
-                <ImagePopup card={selectedCard} onClose={closeAllPopups} />
-                <InfoTooltip />
-            </div>
-        </CurrentUserContext.Provider>
+            } />
+            <Route path="/sing-in" element={
+                <div className="body">
+                    <div className="page">
+                        <Header />
+                        <Login />
+                        <Footer />
+                    </div>
+                </div>
+            } />
+        </Routes>
     );
 }
 

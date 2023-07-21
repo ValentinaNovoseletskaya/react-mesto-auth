@@ -52,8 +52,9 @@ function App() {
         const token = localStorage.getItem('token') 
         if (token) {
             authApi.getUserInfo(token)
-            .then(() => {
+            .then((data) => {
                 setUseLoggedInToken(true);
+                setCurrentUserEmail(data.data.email);
                 navigate('/');
             })
             .catch((err) => {

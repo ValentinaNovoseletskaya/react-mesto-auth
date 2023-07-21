@@ -1,7 +1,8 @@
 .sign__button {
-    background-color: rgb(255, 255, 255);
+    background-color: #FFF;
     color: #000;
     margin-top: 138px;
+    width: 100%;
 }
 
 .sign__button:hover {

@@ -1,45 +1,40 @@
-// import React, {useState} from 'react';
-// import {Link, useNavigate} from 'react-router-dom';
-//import './styles/Register.css';
+import React, {useState} from 'react';
+import {Link} from 'react-router-dom';
 
-function Register() {
-//   const [formValue, setFormValue] = useState({
-//     email: '',
-//     password: ''
-//   })
-//   const navigate = useNavigate();
+function Register({onRegister}) {
+  const [formValue, setFormValue] = useState({
+    email: '',
+    password: ''
+  })
 
-  // const handleChange = (e) => {
-  //   const {name, value} = e.target;
-
-  //   setFormValue({
-  //     ...formValue,
-  //     [name]: value
-  //   });
-  // }
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-    // здесь обработчик регистрации
-  //}
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!formValue.email || !formValue.password){
+      return;
+    }
+    onRegister({
+      email: formValue.email,
+      password: formValue.password,
+    });
+  }
 
   return (
-    <div className="register">
-      <p className="register__welcome">
+    <div className="sign">
+      <p className="sign__welcome">
         Регистрация
       </p>
-       <form className="register__form">        
-         <label htmlFor="email">
-           Email:
-         </label>
-         <input id="email" name="email" type="email" />
-         <label htmlFor="password">
-           Пароль:
-         </label>
-         <input id="password" name="password" type="password" />
-       </form>
-      <div className="register__signin">
-        <p>Уже зарегистрированы?</p>
-        {/* <Link to="sing-in" className="register__login-link">Войти</Link> */}
+      <form className="sign__form" onSubmit={handleSubmit}>
+        <input className="sign__input" id="email" name="email" type="email" placeholder="Email" onChange={ e=>{
+          setFormValue({...formValue, email: e.target.value})
+        } } />
+        <input className="sign__input" id="password" name="password" type="password" placeholder="Пароль" onChange={ e=>{
+          setFormValue({...formValue, password: e.target.value})
+        } } />
+        <button type="submit" className='popup__save-button sign__button'>Зарегистрироваться</button>
+      </form>      
+      <div className="sign__login">
+        <p className="sign__login-text">Уже зарегистрированы?&nbsp;</p>
+        <Link to="/signin" className="sign__link">Войти</Link>
       </div>
     </div>
   );

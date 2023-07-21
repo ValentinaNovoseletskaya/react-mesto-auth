@@ -1,6 +1,7 @@
 import {api} from '../utils/Api.js';
+import {authApi} from '../utils/AuthApi.js';
 import {useEffect, useState} from 'react';
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, useNavigate, Link } from "react-router-dom";
 import '../index.css';
 import Header from './Header.js';
 import Main from './Main.js';
@@ -14,28 +15,28 @@ import {CurrentUserContext} from '../contexts/CurrentUserContext.js';
 import InfoTooltip from './InfoTooltip.js';
 import Register from './Register.js';
 import Login from './Login.js';
+import ProtectedRoute from './ProtectedRoute.js';
 
 function App() {
-    const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] =
-    useState(false);
-    const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] =
-    useState(false);
-    const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] =
-    useState(false);
-    const [isLoadingPlacePopup, setIsLoadingPlacePopup] =
-    useState(false);
-    const [isLoadingProfilePopup, setIsLoadingProfilePopup] =
-    useState(false);
-    const [isLoadingAvatarPopup, setIsLoadingAvatarPopup] =
-    useState(false);
-    const [selectedCard, setSelectedCard] =
-    useState(null);
-    const [toDeleteCard, setToDeleteCard] =
-    useState(null);
+    const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
+    const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
+    const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
+    const [isLoadingPlacePopup, setIsLoadingPlacePopup] = useState(false);
+    const [isLoadingProfilePopup, setIsLoadingProfilePopup] = useState(false);
+    const [isLoadingAvatarPopup, setIsLoadingAvatarPopup] = useState(false);
+    const [selectedCard, setSelectedCard] = useState(null);
+    const [toDeleteCard, setToDeleteCard] = useState(null);
     const [currentUser, setCurrentUser] = useState('');
+    const [currentUserEmail, setCurrentUserEmail] = useState(null);
     const [cards, setCards] = useState([]);
+    const [useLoggedInToken, setUseLoggedInToken] = useState(false);
+    const navigate = useNavigate();
+    const [isSignupSuccess, setIsSignupSuccess] = useState(false);
+    const [isSignupFail, setIsSignupFail] = useState(false);
+    const [isSigninFail, setIsSigninFail] = useState(false);
 
     useEffect(() => {
+       if(useLoggedInToken) {
         api.getAppInfo()
             .then(([userData, initialCards]) => {
                 setCards(initialCards);
@@ -44,7 +45,22 @@ function App() {
             .catch((err) => {
                 console.log(err);
             });
-    }, []);
+        }
+    }, [useLoggedInToken]);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token') 
+        if (token) {
+            authApi.getUserInfo(token)
+            .then(() => {
+                setUseLoggedInToken(true);
+                navigate('/');
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+        }
+     }, [navigate]);
 
     function handleEditAvatarClick() {
         setIsEditAvatarPopupOpen(true);
@@ -72,6 +88,9 @@ function App() {
         setIsAddPlacePopupOpen(false);
         setSelectedCard(null);
         setToDeleteCard(null);
+        setIsSignupSuccess(false);
+        setIsSignupFail(false);
+        setIsSigninFail(false);
     }
 
     function handleSubmit(request) {
@@ -142,41 +161,66 @@ function App() {
         handleSubmit(makeRequest);
     }
 
+    function handleLoginSubmit(formData) {
+        authApi.signin(formData)
+            .then((data) => {
+              setUseLoggedInToken(true);
+              localStorage.setItem('token', data.token);
+              setCurrentUserEmail(formData.email);
+              navigate('/');
+            }).catch((err) => {
+                console.log(err);
+                setIsSigninFail(true);
+            });
+    }
+
+    function handleRegisterSubmit(formData) {        
+          authApi.signup(formData)
+            .then(() => {
+                setUseLoggedInToken(true);
+                setIsSignupSuccess(true);
+            }).catch((err) => {
+                console.log(err);
+                setIsSignupFail(true);
+            });
+    }
+
+    function handleLoggedOut() {        
+        setUseLoggedInToken(false);
+        localStorage.removeItem('token');
+        navigate('/signin');
+    }     
+
     return (
         <Routes>
-            {/* <Route path="/" element={this.state.loggedIn ? <Navigate to="/ducks" replace /> : <Navigate to="/login" replace />} /> */}
-            <Route path="/" element={
-                <CurrentUserContext.Provider value={currentUser}>
-                    <div className="body">
-                        <div className="page">
-                            <Header />
-                            <Main cards={cards} onCardClick={handleCardClick} onCardLike={handleCardLike} onCardDelete={handleDeleteClick} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} />
-                            <Footer />
-                        </div>
-                        <EditProfilePopup onUpdateUser={handleUpdateUser} isOpen={isEditProfilePopupOpen} isLoading={isLoadingProfilePopup} onClose={closeAllPopups} />
-                        <EditAvatarPopup onUpdateAvatar={handleUpdateAvatar} isOpen={isEditAvatarPopupOpen} isLoading={isLoadingAvatarPopup} onClose={closeAllPopups} />
-                        <AddPlacePopup onAddPlace={handleAddPlaceSubmit} isOpen={isAddPlacePopupOpen} isLoading={isLoadingPlacePopup} onClose={closeAllPopups} />
-                        <ConfirmationPopup card={toDeleteCard} onConfirmDelete={handleCardDelete} onClose={closeAllPopups} />
-                        <ImagePopup card={selectedCard} onClose={closeAllPopups} />
-                        <InfoTooltip />
-                    </div>
-                </CurrentUserContext.Provider>
-           } />
-            <Route path="/sing-up" element={
+            <Route path="/" element={<ProtectedRoute element={ CurrentUserContext.Provider } value={currentUser} children={
                 <div className="body">
                     <div className="page">
-                        <Header />
-                        <Register />
+                        <Header onLogOut={handleLoggedOut} headerText={currentUserEmail} />
+                        <Main cards={cards} onCardClick={handleCardClick} onCardLike={handleCardLike} onCardDelete={handleDeleteClick} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} />
                         <Footer />
+                    </div>
+                    <EditProfilePopup onUpdateUser={handleUpdateUser} isOpen={isEditProfilePopupOpen} isLoading={isLoadingProfilePopup} onClose={closeAllPopups} />
+                    <EditAvatarPopup onUpdateAvatar={handleUpdateAvatar} isOpen={isEditAvatarPopupOpen} isLoading={isLoadingAvatarPopup} onClose={closeAllPopups} />
+                    <AddPlacePopup onAddPlace={handleAddPlaceSubmit} isOpen={isAddPlacePopupOpen} isLoading={isLoadingPlacePopup} onClose={closeAllPopups} />
+                    <ConfirmationPopup card={toDeleteCard} onConfirmDelete={handleCardDelete} onClose={closeAllPopups} />
+                    <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+                </div>} loggedIn={useLoggedInToken} />} />
+            <Route path="/signup" element={
+                <div className="body">
+                    <div className="page">
+                        <Header element={<Link to="/signin" className="sign__link">Войти</Link>} />
+                        <Register onRegister={handleRegisterSubmit}/>                        
+                        <InfoTooltip isOpenSuccess={isSignupSuccess} isOpenFail={isSignupFail} onClose={closeAllPopups} />                      
                     </div>
                 </div>
             } />
-            <Route path="/sing-in" element={
+            <Route path="/signin" element={
                 <div className="body">
                     <div className="page">
-                        <Header />
-                        <Login />
-                        <Footer />
+                        <Header element={<Link to="/signup" className="sign__link">Регистрация</Link>} />
+                        <Login onLogIn={handleLoginSubmit} loggedIn={useLoggedInToken} />                        
+                        <InfoTooltip isOpenFail={isSigninFail} onClose={closeAllPopups} />              
                     </div>
                 </div>
             } />

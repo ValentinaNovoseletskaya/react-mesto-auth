@@ -60,7 +60,8 @@ function App() {
                 console.log(err);
             });
         }
-     }, [navigate]);
+        // eslint-disable-next-line
+     }, []);
 
     function handleEditAvatarClick() {
         setIsEditAvatarPopupOpen(true);
@@ -89,7 +90,7 @@ function App() {
         setSelectedCard(null);
         setToDeleteCard(null);
         setIsSignupSuccess(false);
-        setIsAuthFail(false); 
+        setIsAuthFail(false);
     }
 
     function handleSubmit(request) {
@@ -196,14 +197,15 @@ function App() {
             <div className="page">
             <Header onLogOut={handleLoggedOut} headerText={currentUserEmail} />
             <Routes>
-                <Route path="/" element={<ProtectedRoute element={Main} loggedIn={useLoggedInToken} cards={cards} onCardClick={handleCardClick} onCardLike={handleCardLike} onCardDelete={handleDeleteClick} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} 
+                <Route path="/" element={
+                    <ProtectedRoute element={Main} loggedIn={useLoggedInToken} cards={cards} onCardClick={handleCardClick} onCardLike={handleCardLike} onCardDelete={handleDeleteClick} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} 
                 />
                 } />
                 <Route path="/signup" element={ 
-                            <Register onRegister={handleRegisterSubmit}/>
+                    <Register onRegister={handleRegisterSubmit}/>
                 } />
                 <Route path="/signin" element={
-                            <Login onLogIn={handleLoginSubmit} loggedIn={useLoggedInToken} />
+                    <Login onLogIn={handleLoginSubmit} loggedIn={useLoggedInToken} />
                 } />
             </Routes>
             <Footer />

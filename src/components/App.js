@@ -1,7 +1,7 @@
 import {api} from '../utils/Api.js';
 import {authApi} from '../utils/AuthApi.js';
 import {useEffect, useState} from 'react';
-import { Route, Routes, useNavigate, Link } from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import '../index.css';
 import Header from './Header.js';
 import Main from './Main.js';
@@ -32,8 +32,7 @@ function App() {
     const [useLoggedInToken, setUseLoggedInToken] = useState(false);
     const navigate = useNavigate();
     const [isSignupSuccess, setIsSignupSuccess] = useState(false);
-    const [isSignupFail, setIsSignupFail] = useState(false);
-    const [isSigninFail, setIsSigninFail] = useState(false);
+    const [isAuthFail, setIsAuthFail] = useState(false);
 
     useEffect(() => {
        if(useLoggedInToken) {
@@ -90,8 +89,7 @@ function App() {
         setSelectedCard(null);
         setToDeleteCard(null);
         setIsSignupSuccess(false);
-        setIsSignupFail(false);
-        setIsSigninFail(false);
+        setIsAuthFail(false); 
     }
 
     function handleSubmit(request) {
@@ -171,18 +169,18 @@ function App() {
               navigate('/');
             }).catch((err) => {
                 console.log(err);
-                setIsSigninFail(true);
+                setIsAuthFail(true);
             });
     }
 
     function handleRegisterSubmit(formData) {        
           authApi.signup(formData)
-            .then(() => {
-                setUseLoggedInToken(true);
+            .then(() => { 
                 setIsSignupSuccess(true);
+                navigate('/signin');
             }).catch((err) => {
                 console.log(err);
-                setIsSignupFail(true);
+                setIsAuthFail(true);
             });
     }
 
@@ -193,39 +191,31 @@ function App() {
     }     
 
     return (
-        <Routes>
-            <Route path="/" element={<ProtectedRoute element={ CurrentUserContext.Provider } value={currentUser} children={
-                <div className="body">
-                    <div className="page">
-                        <Header onLogOut={handleLoggedOut} headerText={currentUserEmail} />
-                        <Main cards={cards} onCardClick={handleCardClick} onCardLike={handleCardLike} onCardDelete={handleDeleteClick} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} />
-                        <Footer />
-                    </div>
-                    <EditProfilePopup onUpdateUser={handleUpdateUser} isOpen={isEditProfilePopupOpen} isLoading={isLoadingProfilePopup} onClose={closeAllPopups} />
-                    <EditAvatarPopup onUpdateAvatar={handleUpdateAvatar} isOpen={isEditAvatarPopupOpen} isLoading={isLoadingAvatarPopup} onClose={closeAllPopups} />
-                    <AddPlacePopup onAddPlace={handleAddPlaceSubmit} isOpen={isAddPlacePopupOpen} isLoading={isLoadingPlacePopup} onClose={closeAllPopups} />
-                    <ConfirmationPopup card={toDeleteCard} onConfirmDelete={handleCardDelete} onClose={closeAllPopups} />
-                    <ImagePopup card={selectedCard} onClose={closeAllPopups} />
-                </div>} loggedIn={useLoggedInToken} />} />
-            <Route path="/signup" element={
-                <div className="body">
-                    <div className="page">
-                        <Header element={<Link to="/signin" className="sign__link">Войти</Link>} />
-                        <Register onRegister={handleRegisterSubmit}/>                        
-                        <InfoTooltip isOpenSuccess={isSignupSuccess} isOpenFail={isSignupFail} onClose={closeAllPopups} />                      
-                    </div>
-                </div>
-            } />
-            <Route path="/signin" element={
-                <div className="body">
-                    <div className="page">
-                        <Header element={<Link to="/signup" className="sign__link">Регистрация</Link>} />
-                        <Login onLogIn={handleLoginSubmit} loggedIn={useLoggedInToken} />                        
-                        <InfoTooltip isOpenFail={isSigninFail} onClose={closeAllPopups} />              
-                    </div>
-                </div>
-            } />
-        </Routes>
+        <CurrentUserContext.Provider value={currentUser}>
+        <div className="body">
+            <div className="page">
+            <Header onLogOut={handleLoggedOut} headerText={currentUserEmail} />
+            <Routes>
+                <Route path="/" element={<ProtectedRoute element={Main} loggedIn={useLoggedInToken} cards={cards} onCardClick={handleCardClick} onCardLike={handleCardLike} onCardDelete={handleDeleteClick} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} 
+                />
+                } />
+                <Route path="/signup" element={ 
+                            <Register onRegister={handleRegisterSubmit}/>
+                } />
+                <Route path="/signin" element={
+                            <Login onLogIn={handleLoginSubmit} loggedIn={useLoggedInToken} />
+                } />
+            </Routes>
+            <Footer />
+        </div>
+            <InfoTooltip isOpenSuccess={isSignupSuccess} isOpenFail={isAuthFail} onClose={closeAllPopups} /> 
+            <EditProfilePopup onUpdateUser={handleUpdateUser} isOpen={isEditProfilePopupOpen} isLoading={isLoadingProfilePopup} onClose={closeAllPopups} />
+            <EditAvatarPopup onUpdateAvatar={handleUpdateAvatar} isOpen={isEditAvatarPopupOpen} isLoading={isLoadingAvatarPopup} onClose={closeAllPopups} />
+            <AddPlacePopup onAddPlace={handleAddPlaceSubmit} isOpen={isAddPlacePopupOpen} isLoading={isLoadingPlacePopup} onClose={closeAllPopups} />
+            <ConfirmationPopup card={toDeleteCard} onConfirmDelete={handleCardDelete} onClose={closeAllPopups} />
+            <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+        </div>
+        </CurrentUserContext.Provider>
     );
 }
 
